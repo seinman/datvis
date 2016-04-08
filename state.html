@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>D3: Force layout</title>
+		<script type="text/javascript" src="../ioannis/lecture-3/d3/d3.v3.js"></script>
+		<style type="text/css">
+		button {
+			position: absolute;
+			top: 150px;
+			width: 100px;
+			height: 100px;
+			border: 0.5px solid #000000;
+			background-color: #b3b3cc;
+			border-radius: 4px;
+			color: #ffffff;
+			font-size: 50px;
+			text-shadow: 2px 2px #c2c2d6;
+			box-shadow: inset  -5px -5px 5px rgba(118, 118, 162, 0.5);
+		}
+		button:hover{
+			background-color: #8585ad;
+			cursor: pointer;
+		}
+		.buttonfor button {
+			right: 0px;
+		}
+		.buttonbac button {
+			left: 0px;
+		}
+		.infocontain {
+			position: absolute;
+			right: 0px;
+			top: 250px;
+			width: 300px;
+		}
+		.my-container {
+	    position: absolute;
+			left: 0;
+			top: 0;
+	    overflow: hidden;
+			width: 100%;
+			height: 150px;
+		}
+		.my-container h1 {
+				padding-left: 25px;
+		    position: relative;
+		    z-index: 2;
+				font-size: 80px;
+				font-family: sans-serif;
+		}
+		.my-container img {
+		    position: absolute;
+		    left: 0;
+		    top: 0;
+		    opacity: 0.7;
+		}
+		.datecontain {
+			position: absolute;
+			top: 125px;
+			left: 125px;
+			text-align: center;
+			font-size: 50px;
+			width: 75%;
+		}
+		body {
+			background-color: "white";
+		}
+		.main {
+			position: relative;
+			padding-top: 110px;
+			padding-left: 100px;
+		}
+		svg {
+			padding-top: 100px;
+		}
+
+		</style>
+	</head>
+	<body>
+		<div class = "buttonfor" id="forw">
+			<button>  > </button>
+		</div>
+		<div class = "buttonbac" id="back">
+			<button> < </button>
+		</div>
+		<div class="my-container">
+	    <h1>Syria: 5 Years Of Conflict</h1>
+	    <img src="Esfahan.jpg">
+		</div>
+		<div class = "infocontain">
+			<p id = "infopara"> </p>
+		</div>
+		<div class = 'datecontain'>
+			<p id = "datepara">2011 </p>
+		</div>
+		<div class = 'main'>
+		<script type="text/javascript">
+			//Width and height
+			var w = 1000;
+			var h = 600;
+
+			var datevec = ["2011", "2012", "2013", "2014", "2015", "2016"]
+
+			//Create SVG element
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h);
+
+			var cols = ["red", "blue", "green", "purple", "grey"];
+
+			for(i = 0; i < 5; i++) {
+
+			// These variables exist so that I can do a beautiful 3-d effect
+			var gradient = svg.append("defs")
+			  .append("linearGradient")
+			    .attr("id", "gradient" + cols[i])
+			    .attr("x1", "0%")
+			    .attr("y1", "0%")
+			    .attr("x2", "100%")
+			    .attr("y2", "100%")
+			    .attr("spreadMethod", "pad");
+
+			gradient.append("stop")
+			    .attr("offset", "25%")
+			    .attr("stop-color", cols[i])
+			    .attr("stop-opacity", 1);
+
+			gradient.append("stop")
+			    .attr("offset", "100%")
+			    .attr("stop-color", "#000000")
+			    .attr("stop-opacity", 1);
+				};
+
+
+			var state = 0;
+
+			var positions = {
+				regime: [500, 200],
+				ypg: [350,75],
+				pflp: [400,350],
+				hezbollah: [610,330],
+				ahrar: [775,225],
+				jabhat: [625, 75],
+				fsa: [350,300],
+				jayshislam: [675,225],
+				isis: [700, 150],
+				us: [200, 150],
+				russia: [700, 300],
+				uk: [350, 200]
+			};
+
+			var sizes = {
+				regime: [150, 112.5, 75, 52.5, 50],
+				ypg: [0, 15, 30, 30, 22.5, 30],
+				pflp: [15, 7.5, 0, 0, 0],
+				hezbollah: [11, 11, 11, 11, 12.5, 12.5],
+				ahrar: [0, 7.5, 15, 22.5, 30, 30],
+				jabhat: [0, 7.5, 12, 12, 12, 12],
+				fsa: [0, 7.5, 15, 22.5, 30, 30],
+				jayshislam: [0,5, 5, 5, 5, 5],
+				isis:[0,0,0,34, 43, 53],
+				us: [0,0,0,0,45,45],
+				uk: [0,0,0,0,22.5,22.5],
+				russia: [0,0,0,0,45,45]
+
+			}
+
+			var nodewidths = {
+				reghezb: ['black', 'black', 'black', 'black', 'black', 'black'],
+				regpflp: ['black', 'black', 'white', 'white', 'white', 'white'],
+				regypg: ['white', 'red', 'red', 'red', 'red', 'red'],
+				regahr: ['white', 'red', 'red', 'red', 'red', 'red'],
+				regjab: ['white', 'red', 'red', 'red', 'red', 'red'],
+				regisi: ['white', 'white', 'white', 'red', 'red', 'red'],
+				regrus: ['white', 'white', 'white', 'white', 'black', 'black'],
+				isijab: ['white', 'white', 'white', 'red', 'red', 'red'],
+				isiahr: ['white', 'white', 'white', 'red', 'red', 'red'],
+				isiypg: ['white', 'white', 'white', 'red', 'red', 'red'],
+				isirus: ['white', 'white', 'white', 'red', 'red', 'red'],
+				isiusa: ['white', 'white', 'white', 'white', 'red', 'red'],
+				isiuk: ['white', 'white', 'white', 'white', 'red', 'red'],
+				usaypg:['white', 'white', 'white', 'white', 'black', 'black'],
+				usafsa:['white', 'white', 'white', 'white', 'black', 'black'],
+				usauk:['white', 'white', 'white', 'white', 'black', 'black']
+			}
+
+
+			//Original data
+			var dataset = {
+				nodes: [
+					{ name: "Regime", col: "grey", posx: positions.regime[0], posy: positions.regime[1], size: sizes.regime[state], info: "The Syrian government is an authoritarian, Baathist regime commanded by president Bashar al-Asad. Despite being nominally secular, analysts contend that the regime exploits sectarian tensions to remain in power. Asad himself is from the minority Alawite sect, and relies heavily on support from the Alawite community to govern. Bashar al-Asad is the son of the former president Hafez al-Asad, and took power upon the latter's death in the year 2000. The Syrian Army consists of some 125,000 active personnel." },
+					{ name: "ypg", col: 'purple', posx: positions.ypg[0], posy: positions.ypg[1], size: sizes.ypg[state], info: "The People's Protection Units (YPG) is the main armed service of the Kurdish Supreme Committee, the government of Syrian Kurdistan (Rojava). The YPG is primarily Kurdish, but it also recruits Arabs, Turks, and Westerners. There are Assyrian/Syriac Christian units integrated into its command structure. The YPG considers itself a democratic people's army and conducts internal elections as a method of appointing officers. The YPG has shown itself to be one of the most militarily effective of the pro-Western Syrian rebels."},
+					{ name: "pflp", col: "red", posx: positions.pflp[0], posy: positions.pflp[1], size: sizes.pflp[state], info: "The Popular Front for the Liberation of Palestine are a Palestinian militia who worked to help the Syrian government pacify the Palestinian refugee camps."},
+					{ name: "hezbollah", col: "green", posx: positions.hezbollah[0], posy: positions.hezbollah[1], size: sizes.hezbollah[state], info: "Hizbollah are a Lebanese Shiite militia reported to be more powerful than the Lebanese Army itself. Though it was once widely popular in the Arab world as it was seen as a resistance movement against Israel, this image has been tarnished by its intervention in the Syrian conflict on the side of its co-religionists in the Syrian government, which has dealt a serious blow to its cross-sectarian appeal."},
+					{ name: "ahrar", col: "green", posx: positions.ahrar[0], posy: positions.ahrar[1], size: sizes.ahrar[state], info: "Ahrar al-Sham are a Sunni Islamist group founded in 2012. It has been actively attempting to unite all the Islamist opposition to Asad under one banner. It routinely cooperates with Jabhat al-Nusra, and initially also ISIS, though relationships with the latter soured after claims that ISIS had assassinated a key member of Ahrar al-Sham. While it does aim to establish a state run by Shariah law, it is seen as more moderate than ISIS or Jabhat al-Nusra."},
+					{ name: "jabhat", col: "green", posx: positions.jabhat[0], posy: positions.jabhat[1], size: sizes.jabhat[state], info: "Jabhat al-Nusra began to rise to prominence among rebel organizations in Syria for its reliable supply of arms, funding, and fighters that came from a combination of foreign donors and the Iraqi branch of Al Qaeda. Considered well trained, professional, and relatively successful on the battlefield, al-Nusra earned the respect and support of many rebel groups, including many moderate-leaning groups, early in the war. However, although it has avoided tactics like the brutal executions and sectarian attacks that made AQI unpopular, al-Nusra engendered opposition among some Syrians at the beginning of the conflict by imposing religious laws in areas it controlled. "},
+					{ name: "fsa", col: "red", posx: positions.fsa[0], posy: positions.fsa[1], size: sizes.fsa[state], info: "The Free Syrian Army are a motley group of moderates and liberals supported by the Western powers"},
+					{ name: "jayshislam", col: "green", posx: positions.jayshislam[0], posy: positions.jayshislam[1], size: sizes.jayshislam[state], info: "Jaish al-Islam is one of the many Islamist rebel organizations in Syria fighting to depose Bashar al-Assad. It is the result of the merger of about fifty Damascus-based Islamist opposition groups. Although it is clear that Jaish al-Islam has had a significant impact in the war, particularly in Damascus, little verifiable reporting is available on the group."},
+					{ name: "isis", col: "green", posx: positions.isis[0], posy: positions.isis[1], size: sizes.isis[state], info: "The Islamic State of Iraq and Syria (ISIS) is a Salafi jihadist militant group that follows an Islamic fundamentalist, Wahhabi doctrine of Sunni Islam. Adept at social media, ISIL became notorious for its videos of beheadings[50] of both soldiers and civilians, including journalists and aid workers, and for the destruction of cultural heritage sites. The United Nations holds ISIL responsible for human rights abuses and war crimes, and Amnesty International has charged the group with ethnic cleansing on a 'historic scale' in northern Iraq."},
+					{ name: "US", col: "blue", posx: positions.us[0], posy: positions.us[1], size: sizes.us[state], info: "The US military, unarguably the world's most powerful military force, has been increasingly involved in the conflict." },
+					{ name: "uk", col: "blue", posx: positions.uk[0], posy: positions.uk[1], size: sizes.uk[state], info: "Can't we please just go home?" },
+					{ name: "Russia", col: "red", posx: positions.russia[0], posy: positions.russia[1], size: sizes.russia[state], info: "Who needs Allah when you've got Putin?" }
+				],
+
+				edges: [
+/*regime*/
+		{ col: "black", posx1: positions.regime[0], posx2: positions.hezbollah[0], posy1: positions.regime[1], posy2: positions.hezbollah[1], stroke : nodewidths.reghezb[state] },
+		{ col: "black", posx1: positions.regime[0], posx2: positions.pflp[0], posy1: positions.regime[1], posy2: positions.pflp[1], stroke : nodewidths.regpflp[state] },
+		{ col: "red", posx1: positions.regime[0], posx2: positions.ypg[0], posy1: positions.regime[1], posy2: positions.ypg[1], stroke : nodewidths.regypg[state] },
+		{ col: "red", posx1: positions.regime[0], posx2: positions.ahrar[0], posy1: positions.regime[1], posy2: positions.ahrar[1], stroke : nodewidths.regahr[state]},
+		{ col: "red", posx1: positions.regime[0], posx2: positions.jabhat[0], posy1: positions.regime[1], posy2: positions.jabhat[1], stroke : nodewidths.regjab[state]},
+		{ col: "red", posx1: positions.regime[0], posx2: positions.isis[0], posy1: positions.regime[1], posy2: positions.isis[1], stroke : nodewidths.regisi[state]},
+		{ col: "black", posx1: positions.regime[0], posx2: positions.russia[0], posy1: positions.regime[1], posy2: positions.russia[1], stroke : nodewidths.regrus[state]},
+/*intra-islamist*/
+		{ col: "red", posx1: positions.isis[0], posx2: positions.jabhat[0], posy1: positions.isis[1], posy2: positions.jabhat[1], stroke : nodewidths.isijab[state]},
+		{ col: "red", posx1: positions.isis[0], posx2: positions.ahrar[0], posy1: positions.isis[1], posy2: positions.ahrar[1], stroke : nodewidths.isiahr[state]},
+/*everyone hates ISIS*/
+		{ col: "red", posx1: positions.isis[0], posx2: positions.us[0], posy1: positions.isis[1], posy2: positions.us[1], stroke : nodewidths.isiusa[state]},
+		{ col: "red", posx1: positions.isis[0], posx2: positions.russia[0], posy1: positions.isis[1], posy2: positions.russia[1], stroke : nodewidths.isirus[state]},
+		{ col: "red", posx1: positions.isis[0], posx2: positions.ypg[0], posy1: positions.isis[1], posy2: positions.ypg[1], stroke : nodewidths.isiypg[state]},
+		{ col: "red", posx1: positions.isis[0], posx2: positions.uk[0], posy1: positions.isis[1], posy2: positions.uk[1], stroke: nodewidths.isiuk[state]},
+/*the US has few allies*/
+		{ col: "black", posx1: positions.us[0], posx2: positions.ypg[0], posy1: positions.us[1], posy2: positions.ypg[1], stroke : nodewidths.usaypg[state]},
+		{ col: "black", posx1: positions.us[0], posx2: positions.fsa[0], posy1: positions.us[1], posy2: positions.fsa[1], stroke : nodewidths.usafsa[state]},
+		{ col: "black", posx1: positions.us[0], posx2: positions.uk[0], posy1: positions.us[1], posy2: positions.uk[1], stroke : nodewidths.usauk[state]}
+			]};
+
+
+
+			var positionLabel = svg.append("text")
+				      .attr("x", 10)
+				      .attr("y", 30);
+
+			//Create edges as lines
+			var edges = svg.selectAll("line")
+				.data(dataset.edges)
+				.enter()
+				.append("line")
+				.style("stroke", function(d) {
+					return d.col;
+				})
+				.attr("x1", function(d) {
+					return d.posx1;
+				})
+				.attr("x2", function(d) {
+					return d.posx2;
+				})
+				.attr("y1", function(d) {
+					return d.posy1;
+				})
+				.attr("y2", function(d) {
+					return d.posy2;
+				})
+				.style("stroke-width", function(d) {
+					return d.stroke;
+				});
+
+			//Create nodes as circles
+			var nodes = svg.selectAll("circle")
+				.data(dataset.nodes)
+				.enter()
+				.append("circle")
+				.attr("r", function(d) {
+					return d.size;
+				})
+				.style("fill", function(d) {
+					return "url(#gradient" + d.col + ")";
+				})
+				.attr("cx", function(d) {
+			  	return d.posx;
+				})
+				.attr("cy", function(d) {
+					return d.posy;
+				})
+				.on("click", function(d) {
+					document.getElementById("infopara").innerHTML = d.info;
+				})
+				.append("title")
+				.text(function(d) {
+	 				return d.name;
+				});
+
+				d3.select("#forw button").on("click", function(){
+					if(state < 4) {
+
+						state++;
+						document.getElementById("datepara").innerHTML = datevec[state];
+
+						//Original data
+						var dataset = {
+							nodes: [
+								{ name: "Regime", col: "grey", posx: positions.regime[0], posy: positions.regime[1], size: sizes.regime[state], info: "The Syrian government is an authoritarian, Baathist regime commanded by president Bashar al-Asad. Despite being nominally secular, analysts contend that the regime exploits sectarian tensions to remain in power. Asad himself is from the minority Alawite sect, and relies heavily on support from the Alawite community to govern. Bashar al-Asad is the son of the former president Hafez al-Asad, and took power upon the latter's death in the year 2000. The Syrian Army consists of some 125,000 active personnel." },
+								{ name: "ypg", col: 'purple', posx: positions.ypg[0], posy: positions.ypg[1], size: sizes.ypg[state], info: "The People's Protection Units (YPG) is the main armed service of the Kurdish Supreme Committee, the government of Syrian Kurdistan (Rojava). The YPG is primarily Kurdish, but it also recruits Arabs, Turks, and Westerners. There are Assyrian/Syriac Christian units integrated into its command structure. The YPG considers itself a democratic people's army and conducts internal elections as a method of appointing officers. The YPG has shown itself to be one of the most militarily effective of the pro-Western Syrian rebels."},
+								{ name: "pflp", col: "red", posx: positions.pflp[0], posy: positions.pflp[1], size: sizes.pflp[state], info: "The Popular Front for the Liberation of Palestine are a Palestinian militia who worked to help the Syrian government pacify the Palestinian refugee camps."},
+								{ name: "hezbollah", col: "green", posx: positions.hezbollah[0], posy: positions.hezbollah[1], size: sizes.hezbollah[state], info: "Hizbollah are a Lebanese Shiite militia reported to be more powerful than the Lebanese Army itself. Though it was once widely popular in the Arab world as it was seen as a resistance movement against Israel, this image has been tarnished by its intervention in the Syrian conflict on the side of its co-religionists in the Syrian government, which has dealt a serious blow to its cross-sectarian appeal."},
+								{ name: "ahrar", col: "green", posx: positions.ahrar[0], posy: positions.ahrar[1], size: sizes.ahrar[state], info: "Ahrar al-Sham are a Sunni Islamist group founded in 2012. It has been actively attempting to unite all the Islamist opposition to Asad under one banner. It routinely cooperates with Jabhat al-Nusra, and initially also ISIS, though relationships with the latter soured after claims that ISIS had assassinated a key member of Ahrar al-Sham. While it does aim to establish a state run by Shariah law, it is seen as more moderate than ISIS or Jabhat al-Nusra."},
+								{ name: "jabhat", col: "green", posx: positions.jabhat[0], posy: positions.jabhat[1], size: sizes.jabhat[state], info: "Jabhat al-Nusra began to rise to prominence among rebel organizations in Syria for its reliable supply of arms, funding, and fighters that came from a combination of foreign donors and the Iraqi branch of Al Qaeda. Considered well trained, professional, and relatively successful on the battlefield, al-Nusra earned the respect and support of many rebel groups, including many moderate-leaning groups, early in the war. However, although it has avoided tactics like the brutal executions and sectarian attacks that made AQI unpopular, al-Nusra engendered opposition among some Syrians at the beginning of the conflict by imposing religious laws in areas it controlled. "},
+								{ name: "fsa", col: "red", posx: positions.fsa[0], posy: positions.fsa[1], size: sizes.fsa[state], info: "The Free Syrian Army are a motley group of moderates and liberals supported by the Western powers"},
+								{ name: "jayshislam", col: "green", posx: positions.jayshislam[0], posy: positions.jayshislam[1], size: sizes.jayshislam[state], info: "Jaish al-Islam is one of the many Islamist rebel organizations in Syria fighting to depose Bashar al-Assad. It is the result of the merger of about fifty Damascus-based Islamist opposition groups. Although it is clear that Jaish al-Islam has had a significant impact in the war, particularly in Damascus, little verifiable reporting is available on the group."},
+								{ name: "isis", col: "green", posx: positions.isis[0], posy: positions.isis[1], size: sizes.isis[state], info: "The Islamic State of Iraq and Syria (ISIS) is a Salafi jihadist militant group that follows an Islamic fundamentalist, Wahhabi doctrine of Sunni Islam. Adept at social media, ISIL became notorious for its videos of beheadings[50] of both soldiers and civilians, including journalists and aid workers, and for the destruction of cultural heritage sites. The United Nations holds ISIL responsible for human rights abuses and war crimes, and Amnesty International has charged the group with ethnic cleansing on a 'historic scale' in northern Iraq."},
+								{ name: "US", col: "blue", posx: positions.us[0], posy: positions.us[1], size: sizes.us[state], info: "The US military, unarguably the world's most powerful military force, has been increasingly involved in the conflict." },
+								{ name: "uk", col: "blue", posx: positions.uk[0], posy: positions.uk[1], size: sizes.uk[state], info: "Can't we please just go home?" },
+								{ name: "Russia", col: "red", posx: positions.russia[0], posy: positions.russia[1], size: sizes.russia[state], info: "Who needs Allah when you've got Putin?" }
+							],
+
+							edges: [
+			/*regime*/
+					{ col: "black", posx1: positions.regime[0], posx2: positions.hezbollah[0], posy1: positions.regime[1], posy2: positions.hezbollah[1], stroke : nodewidths.reghezb[state] },
+					{ col: "white", posx1: positions.regime[0], posx2: positions.pflp[0], posy1: positions.regime[1], posy2: positions.pflp[1], stroke : nodewidths.regpflp[state] },
+					{ col: "red", posx1: positions.regime[0], posx2: positions.ypg[0], posy1: positions.regime[1], posy2: positions.ypg[1], stroke : nodewidths.regypg[state] },
+					{ col: "red", posx1: positions.regime[0], posx2: positions.ahrar[0], posy1: positions.regime[1], posy2: positions.ahrar[1], stroke : nodewidths.regahr[state]},
+					{ col: "red", posx1: positions.regime[0], posx2: positions.jabhat[0], posy1: positions.regime[1], posy2: positions.jabhat[1], stroke : nodewidths.regjab[state]},
+					{ col: "red", posx1: positions.regime[0], posx2: positions.isis[0], posy1: positions.regime[1], posy2: positions.isis[1], stroke : nodewidths.regisi[state]},
+					{ col: "black", posx1: positions.regime[0], posx2: positions.russia[0], posy1: positions.regime[1], posy2: positions.russia[1], stroke : nodewidths.regrus[state]},
+			/*intra-islamist*/
+					{ col: "red", posx1: positions.isis[0], posx2: positions.jabhat[0], posy1: positions.isis[1], posy2: positions.jabhat[1], stroke : nodewidths.isijab[state]},
+					{ col: "red", posx1: positions.isis[0], posx2: positions.ahrar[0], posy1: positions.isis[1], posy2: positions.ahrar[1], stroke : nodewidths.isiahr[state]},
+			/*everyone hates ISIS*/
+					{ col: "red", posx1: positions.isis[0], posx2: positions.us[0], posy1: positions.isis[1], posy2: positions.us[1], stroke : nodewidths.isiusa[state]},
+					{ col: "red", posx1: positions.isis[0], posx2: positions.russia[0], posy1: positions.isis[1], posy2: positions.russia[1], stroke : nodewidths.isirus[state]},
+					{ col: "red", posx1: positions.isis[0], posx2: positions.ypg[0], posy1: positions.isis[1], posy2: positions.ypg[1], stroke : nodewidths.isiypg[state]},
+					{ col: "red", posx1: positions.isis[0], posx2: positions.uk[0], posy1: positions.isis[1], posy2: positions.uk[1], stroke: nodewidths.isiuk[state]},
+			/*the US has few allies*/
+					{ col: "black", posx1: positions.us[0], posx2: positions.ypg[0], posy1: positions.us[1], posy2: positions.ypg[1], stroke : nodewidths.usaypg[state]},
+					{ col: "black", posx1: positions.us[0], posx2: positions.fsa[0], posy1: positions.us[1], posy2: positions.fsa[1], stroke : nodewidths.usafsa[state]},
+					{ col: "black", posx1: positions.us[0], posx2: positions.uk[0], posy1: positions.us[1], posy2: positions.uk[1], stroke : nodewidths.usauk[state]}
+						]};
+
+						svg.selectAll("circle")
+							.data(dataset.nodes)
+							.transition()
+							.duration(1000)
+							.attr("r", function(d) {
+								return d.size;
+							})
+							.style("stroke", "black")
+							.style("fill", function(d) {
+								return "url(#gradient" + d.col + ")";
+							})
+							.attr("cx", function(d) {
+						  	return d.posx;
+							})
+							.attr("cy", function(d) {
+								return d.posy;
+							})
+							.append("title")
+							.text(function(d) {
+				 				return d.name;
+							});
+
+							svg.selectAll("line")
+								.data(dataset.edges)
+								.style("stroke", function(d) {
+									return d.col;
+								})
+								.attr("x1", function(d) {
+									return d.posx1;
+								})
+								.attr("x2", function(d) {
+									return d.posx2;
+								})
+								.attr("y1", function(d) {
+									return d.posy1;
+								})
+								.attr("y2", function(d) {
+									return d.posy2;
+								})
+								.style("stroke-width", function(d) {
+									return d.stroke;
+								});
+
+}
+					});
+					d3.select("#back button").on("click", function(){
+						if(state > 0) {
+
+							state--;
+							document.getElementById("datepara").innerHTML = datevec[state];
+
+							//Original data
+							var dataset = {
+								nodes: [
+									{ name: "Regime", col: "grey", posx: positions.regime[0], posy: positions.regime[1], size: sizes.regime[state], info: "The Syrian government is an authoritarian, Baathist regime commanded by president Bashar al-Asad. Despite being nominally secular, analysts contend that the regime exploits sectarian tensions to remain in power. Asad himself is from the minority Alawite sect, and relies heavily on support from the Alawite community to govern. Bashar al-Asad is the son of the former president Hafez al-Asad, and took power upon the latter's death in the year 2000. The Syrian Army consists of some 125,000 active personnel." },
+									{ name: "ypg", col: 'purple', posx: positions.ypg[0], posy: positions.ypg[1], size: sizes.ypg[state], info: "The People's Protection Units (YPG) is the main armed service of the Kurdish Supreme Committee, the government of Syrian Kurdistan (Rojava). The YPG is primarily Kurdish, but it also recruits Arabs, Turks, and Westerners. There are Assyrian/Syriac Christian units integrated into its command structure. The YPG considers itself a democratic people's army and conducts internal elections as a method of appointing officers. The YPG has shown itself to be one of the most militarily effective of the pro-Western Syrian rebels."},
+									{ name: "pflp", col: "red", posx: positions.pflp[0], posy: positions.pflp[1], size: sizes.pflp[state], info: "The Popular Front for the Liberation of Palestine are a Palestinian militia who worked to help the Syrian government pacify the Palestinian refugee camps."},
+									{ name: "hezbollah", col: "green", posx: positions.hezbollah[0], posy: positions.hezbollah[1], size: sizes.hezbollah[state], info: "Hizbollah are a Lebanese Shiite militia reported to be more powerful than the Lebanese Army itself. Though it was once widely popular in the Arab world as it was seen as a resistance movement against Israel, this image has been tarnished by its intervention in the Syrian conflict on the side of its co-religionists in the Syrian government, which has dealt a serious blow to its cross-sectarian appeal."},
+									{ name: "ahrar", col: "green", posx: positions.ahrar[0], posy: positions.ahrar[1], size: sizes.ahrar[state], info: "Ahrar al-Sham are a Sunni Islamist group founded in 2012. It has been actively attempting to unite all the Islamist opposition to Asad under one banner. It routinely cooperates with Jabhat al-Nusra, and initially also ISIS, though relationships with the latter soured after claims that ISIS had assassinated a key member of Ahrar al-Sham. While it does aim to establish a state run by Shariah law, it is seen as more moderate than ISIS or Jabhat al-Nusra."},
+									{ name: "jabhat", col: "green", posx: positions.jabhat[0], posy: positions.jabhat[1], size: sizes.jabhat[state], info: "Jabhat al-Nusra began to rise to prominence among rebel organizations in Syria for its reliable supply of arms, funding, and fighters that came from a combination of foreign donors and the Iraqi branch of Al Qaeda. Considered well trained, professional, and relatively successful on the battlefield, al-Nusra earned the respect and support of many rebel groups, including many moderate-leaning groups, early in the war. However, although it has avoided tactics like the brutal executions and sectarian attacks that made AQI unpopular, al-Nusra engendered opposition among some Syrians at the beginning of the conflict by imposing religious laws in areas it controlled. "},
+									{ name: "fsa", col: "red", posx: positions.fsa[0], posy: positions.fsa[1], size: sizes.fsa[state], info: "The Free Syrian Army are a motley group of moderates and liberals supported by the Western powers"},
+									{ name: "jayshislam", col: "green", posx: positions.jayshislam[0], posy: positions.jayshislam[1], size: sizes.jayshislam[state], info: "Jaish al-Islam is one of the many Islamist rebel organizations in Syria fighting to depose Bashar al-Assad. It is the result of the merger of about fifty Damascus-based Islamist opposition groups. Although it is clear that Jaish al-Islam has had a significant impact in the war, particularly in Damascus, little verifiable reporting is available on the group."},
+									{ name: "isis", col: "green", posx: positions.isis[0], posy: positions.isis[1], size: sizes.isis[state], info: "The Islamic State of Iraq and Syria (ISIS) is a Salafi jihadist militant group that follows an Islamic fundamentalist, Wahhabi doctrine of Sunni Islam. Adept at social media, ISIL became notorious for its videos of beheadings[50] of both soldiers and civilians, including journalists and aid workers, and for the destruction of cultural heritage sites. The United Nations holds ISIL responsible for human rights abuses and war crimes, and Amnesty International has charged the group with ethnic cleansing on a 'historic scale' in northern Iraq."},
+									{ name: "US", col: "blue", posx: positions.us[0], posy: positions.us[1], size: sizes.us[state], info: "The US military, unarguably the world's most powerful military force, has been increasingly involved in the conflict." },
+									{ name: "uk", col: "blue", posx: positions.uk[0], posy: positions.uk[1], size: sizes.uk[state], info: "Can't we please just go home?" },
+									{ name: "Russia", col: "red", posx: positions.russia[0], posy: positions.russia[1], size: sizes.russia[state], info: "Who needs Allah when you've got Putin?" }
+								],
+
+								edges: [
+				/*regime*/
+						{ col: "black", posx1: positions.regime[0], posx2: positions.hezbollah[0], posy1: positions.regime[1], posy2: positions.hezbollah[1], stroke : nodewidths.reghezb[state] },
+						{ col: "white", posx1: positions.regime[0], posx2: positions.pflp[0], posy1: positions.regime[1], posy2: positions.pflp[1], stroke : nodewidths.regpflp[state] },
+						{ col: "red", posx1: positions.regime[0], posx2: positions.ypg[0], posy1: positions.regime[1], posy2: positions.ypg[1], stroke : nodewidths.regypg[state] },
+						{ col: "red", posx1: positions.regime[0], posx2: positions.ahrar[0], posy1: positions.regime[1], posy2: positions.ahrar[1], stroke : nodewidths.regahr[state]},
+						{ col: "red", posx1: positions.regime[0], posx2: positions.jabhat[0], posy1: positions.regime[1], posy2: positions.jabhat[1], stroke : nodewidths.regjab[state]},
+						{ col: "red", posx1: positions.regime[0], posx2: positions.isis[0], posy1: positions.regime[1], posy2: positions.isis[1], stroke : nodewidths.regisi[state]},
+						{ col: "black", posx1: positions.regime[0], posx2: positions.russia[0], posy1: positions.regime[1], posy2: positions.russia[1], stroke : nodewidths.regrus[state]},
+				/*intra-islamist*/
+						{ col: "red", posx1: positions.isis[0], posx2: positions.jabhat[0], posy1: positions.isis[1], posy2: positions.jabhat[1], stroke : nodewidths.isijab[state]},
+						{ col: "red", posx1: positions.isis[0], posx2: positions.ahrar[0], posy1: positions.isis[1], posy2: positions.ahrar[1], stroke : nodewidths.isiahr[state]},
+				/*everyone hates ISIS*/
+						{ col: "red", posx1: positions.isis[0], posx2: positions.us[0], posy1: positions.isis[1], posy2: positions.us[1], stroke : nodewidths.isiusa[state]},
+						{ col: "red", posx1: positions.isis[0], posx2: positions.russia[0], posy1: positions.isis[1], posy2: positions.russia[1], stroke : nodewidths.isirus[state]},
+						{ col: "red", posx1: positions.isis[0], posx2: positions.ypg[0], posy1: positions.isis[1], posy2: positions.ypg[1], stroke : nodewidths.isiypg[state]},
+						{ col: "red", posx1: positions.isis[0], posx2: positions.uk[0], posy1: positions.isis[1], posy2: positions.uk[1], stroke: nodewidths.isiuk[state]},
+				/*the US has few allies*/
+						{ col: "black", posx1: positions.us[0], posx2: positions.ypg[0], posy1: positions.us[1], posy2: positions.ypg[1], stroke : nodewidths.usaypg[state]},
+						{ col: "black", posx1: positions.us[0], posx2: positions.fsa[0], posy1: positions.us[1], posy2: positions.fsa[1], stroke : nodewidths.usafsa[state]},
+						{ col: "black", posx1: positions.us[0], posx2: positions.uk[0], posy1: positions.us[1], posy2: positions.uk[1], stroke : nodewidths.usauk[state]}
+							]};
+
+							svg.selectAll("circle")
+								.data(dataset.nodes)
+								.transition()
+								.duration(1000)
+								.attr("r", function(d) {
+									return d.size;
+								})
+								.style("stroke", "black")
+								.style("fill", function(d) {
+									return "url(#gradient" + d.col + ")";
+								})
+								.attr("cx", function(d) {
+							  	return d.posx;
+								})
+								.attr("cy", function(d) {
+									return d.posy;
+								})
+								.append("title")
+								.text(function(d) {
+					 				return d.name;
+								});
+
+								svg.selectAll("line")
+									.data(dataset.edges)
+									.style("stroke", function(d) {
+										return d.col;
+									})
+									.attr("x1", function(d) {
+										return d.posx1;
+									})
+									.attr("x2", function(d) {
+										return d.posx2;
+									})
+									.attr("y1", function(d) {
+										return d.posy1;
+									})
+									.attr("y2", function(d) {
+										return d.posy2;
+									})
+									.style("stroke-width", function(d) {
+										return d.stroke;
+									});
+
+	}
+						});
+
+
+    	</script>
+		</div>
+  	</body>
+</html>
